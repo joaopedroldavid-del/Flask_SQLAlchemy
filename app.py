@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from models.user import User
 from database import db
-from flask_login import LoginManager, login_user, current_user
+from flask_login import LoginManager, login_user, current_user, logout_user, login_required
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "secretKey"
@@ -32,6 +32,26 @@ def login():
             return jsonify({"message": "Autenticação realizada com sucesso"}), 200
     
     return jsonify({"message": "Credenciaís inválidas"}), 404
+
+@app.route("/logout", methods=["GET"])
+@login_required
+def logout():
+    logout_user()
+    return jsonify({"message": "Usuário deslogado com sucesso"})
+
+@app.route("/user", methods=["POST"])
+def crate_user():
+    data = request.json
+    username = data.get("username")
+    password = data.get("password")
+
+    if username and password:
+        user = User(username=username, password = password)
+        db.session.add(user)
+        db.session.commit()
+        return jsonify({"message": "Usuário cadastrado com sucesso"})
+
+    return jsonify({"message": "Dados inválidos"}), 401
 
 @app.route("/helloworld", methods=["GET"])
 def helloWorld():
